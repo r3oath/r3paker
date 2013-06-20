@@ -97,6 +97,13 @@ class r3paker():
         pass
 
     def packFile(self, crypter, file_):
+        """Encrypts and compresses a single file.
+
+        Keyword Arguments:
+        crypter -- Reference to the crypter currently in use.
+        file_ -- The file to pack.
+
+        """
         global THREAD_LOCK
         global ACTIVE_THREADS
         global R3PACK_SIGNATURE
@@ -173,6 +180,13 @@ class r3paker():
         return (total_file_count, time.time() - start_time)
 
     def unpackFile(self, crypter, file_):
+        """Decrypts and decompresses a single file.
+
+        Keyword Arguments:
+        crypter -- Reference to the crypter currently in use.
+        file_ -- The file to unpack.
+
+        """
         global THREAD_LOCK
         global ACTIVE_THREADS
         global R3PACK_SIGNATURE
