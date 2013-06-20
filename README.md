@@ -3,7 +3,7 @@ R3PAKER
 
 #####Secure File and Document Storage System for Linux, Windows and Mac OS.
 
-R3PAKER processes any directory, AES encrypting its contents and compressing each file using BZ2. These packed files can be stored safely on remote servers, USB keys, etc without anyone being able to use them or view their contents. Only someone who knows the security key will be able to unpack the directory. This is similar to using a program like TrueCrypt although not nearly advanced. What R3PAKER does offer is a single script to quickly encrypt and decrypt any directory on the fly without having to install a program to do so.
+R3PAKER processes any directory, AES encrypting its contents and compressing each file using BZ2. These packed files can be stored safely on remote servers, USB keys, etc without anyone being able to use them or view their contents. Only someone who knows the security key will be able to unpack the directory. This is similar to using a program like TrueCrypt although not nearly as advanced. What R3PAKER does offer is a single script to quickly encrypt and decrypt any directory on the fly without having to install a program to do so.
 
 Copyright (C) 2013 Tristan Strathearn (r3oath@gmail.com)
 
