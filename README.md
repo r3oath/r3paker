@@ -29,7 +29,7 @@ By defualt R3PAKER looks for a directory call `Data` in the same location as its
 
 ####Invalid Keys.
 
-If you've packed a directory, you would have specified a security key. Only the exact same security key can properly unpack the data. If you were to enter the incorrect key, you data will become unscrambled and unsuable. So to help avoid this R3PAKER creates a `keycheck` file in the packed data directory. Before unpacking R3PAKER tests the supplied key against this file to verify it. If it fails, you will be notified. Say for some reason you purposely deleted the `keycheck` file you'll be asked if you still want to unpack the data, just make sure it's the right key!
+If you've packed a directory, you would have specified a security key. Only the exact same security key can properly unpack the data. If you were to enter the incorrect key, you data will become scrambled and unsuable. So to help avoid this R3PAKER creates a `keycheck` file in the packed data directory. Before unpacking R3PAKER tests the supplied key against this file to verify it. If it fails, you will be notified. Say for some reason you purposely deleted the `keycheck` file you'll be asked if you still want to unpack the data, just make sure it's the right key!
 
 ![Usage](http://www.r3oath.com/images/r3paker/win-badkey.jpg)
 ![Usage](http://www.r3oath.com/images/r3paker/linux-badkey.jpg)
