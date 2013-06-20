@@ -12,13 +12,22 @@ import time
 import bz2
 import base64
 import hashlib
+import thread
+import threading
 
 from argparse import ArgumentParser
 from Crypto.Cipher import AES
 from Crypto import Random
 
-R3PACK_SIGNATURE = '_r3pak'
-VERSION = '1.0.0'
+# ----------------------------------------------------------------------------
+# GLOBALS.
+
+R3PACK_SIGNATURE    = '_r3pak'
+VERSION             = '1.1.0'
+OUTPUT_LOCK         = threading.Lock()
+THREAD_LOCK         = threading.Lock()
+ACTIVE_THREADS      = 0
+MAX_THREADS         = 1
 
 # ----------------------------------------------------------------------------
 
@@ -87,6 +96,41 @@ class r3paker():
     def __init__(self):
         pass
 
+    def packFile(self, crypter, file_):
+        global THREAD_LOCK
+        global ACTIVE_THREADS
+        global R3PACK_SIGNATURE
+
+        print_('Packing: %s' % getNicePath(file_))
+        try:
+            # Get the file data.
+            fd = open(file_, 'rb')
+            data = fd.read()
+            fd.close()
+
+            try:
+                # Compress/Encrpyt the data and save.
+                fd = open(file_ + R3PACK_SIGNATURE, 'wb')
+                fd.write(crypter.encrypt(data))
+                fd.close()
+
+                try:
+                    # Remove the original file.
+                    os.remove(file_)
+                except:
+                    print_('Could not remove: %s' %
+                           getNicePath(file_), highlight=True)
+            except:
+                print_('Encrpytion Failed: %s' % getNicePath(file_),
+                      highlight=True)
+        except:
+            print_('Failed to open: %s' % getNicePath(file_),
+                  highlight=True)
+
+        THREAD_LOCK.acquire()
+        ACTIVE_THREADS -= 1
+        THREAD_LOCK.release()
+
     def pack(self, key, base_dir='Data'):
         """Recursively packs and encrypts the <base_dir>.
 
@@ -95,6 +139,10 @@ class r3paker():
         base_dir -- The base data directory. (Defualt 'Data')
 
         """
+        global THREAD_LOCK
+        global ACTIVE_THREADS
+        global MAX_THREADS
+
         start_time = time.time()
         total_file_count = 0
 
@@ -105,34 +153,59 @@ class r3paker():
 
         for files in walker.getFiles():
             for file_ in files:
-                print_('Packing: %s' % getNicePath(file_))
-                try:
-                    # Get the file data.
-                    fd = open(file_, 'rb')
-                    data = fd.read()
-                    fd.close()
 
-                    try:
-                        # Compress/Encrpyt the data and save.
-                        fd = open(file_ + R3PACK_SIGNATURE, 'wb')
-                        fd.write(crypter.encrypt(data))
-                        fd.close()
+                # Wait for a thread to become available.
+                while ACTIVE_THREADS >= MAX_THREADS:
+                    pass
 
-                        try:
-                            # Remove the original file.
-                            os.remove(file_)
-                        except:
-                            print_('Could not remove: %s' %
-                                   getNicePath(file_), highlight=True)
-                    except:
-                        print_('Encrpytion Failed: %s' % getNicePath(file_),
-                              highlight=True)
-                except:
-                    print_('Failed to open: %s' % getNicePath(file_),
-                          highlight=True)
+                # Start a new thread.
+                THREAD_LOCK.acquire()
+                thread.start_new_thread(self.packFile, (crypter, file_,))
+                ACTIVE_THREADS += 1
+                THREAD_LOCK.release()
 
                 total_file_count += 1
+
+        # Wait for all threads to complete before returning.
+        while ACTIVE_THREADS != 0:
+            pass
+
         return (total_file_count, time.time() - start_time)
+
+    def unpackFile(self, crypter, file_):
+        global THREAD_LOCK
+        global ACTIVE_THREADS
+        global R3PACK_SIGNATURE
+
+        print_('Unpacking: %s' % getNicePath(file_))
+        try:
+            # Get the file data.
+            fd = open(file_, 'rb')
+            data = fd.read()
+            fd.close()
+
+            try:
+                # Decompress/Decrpyt the data and save.
+                fd = open(file_.replace(R3PACK_SIGNATURE, ''), 'wb')
+                fd.write(crypter.decrypt(data))
+                fd.close()
+
+                try:
+                    # Remove the original file.
+                    os.remove(file_)
+                except:
+                    print_('Could not remove: %s' %
+                           getNicePath(file_), highlight=True)
+            except:
+                print_('Decrpytion Failed: %s' % getNicePath(file_),
+                      highlight=True)
+        except:
+            print_('Failed to open: %s' % getNicePath(file_),
+                  highlight=True)
+
+        THREAD_LOCK.acquire()
+        ACTIVE_THREADS -= 1
+        THREAD_LOCK.release()
 
     def unpack(self, key, base_dir='Data'):
         """Recursively unpacks and decrypts the <base_dir>
@@ -142,6 +215,10 @@ class r3paker():
         base_dir -- The base data directory. (Defualt 'Data')
 
         """
+        global THREAD_LOCK
+        global ACTIVE_THREADS
+        global MAX_THREADS
+
         start_time = time.time()
         total_file_count = 0
 
@@ -152,33 +229,23 @@ class r3paker():
 
         for files in walker.getFiles(only_packed=True):
             for file_ in files:
-                print_('Unpacking: %s' % getNicePath(file_))
-                try:
-                    # Get the file data.
-                    fd = open(file_, 'rb')
-                    data = fd.read()
-                    fd.close()
 
-                    try:
-                        # Decompress/Decrpyt the data and save.
-                        fd = open(file_.replace(R3PACK_SIGNATURE, ''), 'wb')
-                        fd.write(crypter.decrypt(data))
-                        fd.close()
+                # Wait for a thread to become available.
+                while ACTIVE_THREADS >= MAX_THREADS:
+                    pass
 
-                        try:
-                            # Remove the original file.
-                            os.remove(file_)
-                        except:
-                            print_('Could not remove: %s' %
-                                   getNicePath(file_), highlight=True)
-                    except:
-                        print_('Decrpytion Failed: %s' % getNicePath(file_),
-                              highlight=True)
-                except:
-                    print_('Failed to open: %s' % getNicePath(file_),
-                          highlight=True)
+                # Start a new thread.
+                THREAD_LOCK.acquire()
+                thread.start_new_thread(self.unpackFile, (crypter, file_,))
+                ACTIVE_THREADS += 1
+                THREAD_LOCK.release()
 
                 total_file_count += 1
+
+        # Wait for all threads to complete before returning.
+        while ACTIVE_THREADS != 0:
+            pass
+
         return (total_file_count, time.time() - start_time)
 
 # ----------------------------------------------------------------------------
@@ -194,17 +261,23 @@ def print_(text, symbol='', highlight=False):
 
     """
     if highlight == False:
+        OUTPUT_LOCK.acquire()
         print symbol + text
+        OUTPUT_LOCK.release()
     else:
         newLine()
+        OUTPUT_LOCK.acquire()
         print '/' * (len(text) + len(symbol))
         print symbol + text
         print '/' * (len(text) + len(symbol))
+        OUTPUT_LOCK.release()
         newLine()
 
 def newLine():
     """Creates a new line, for spacing out printed text etc."""
+    OUTPUT_LOCK.acquire()
     print ''
+    OUTPUT_LOCK.release()
 
 def getNicePath(path, length=50):
     """Returns a formatted string based on the specified path if the path
@@ -319,6 +392,8 @@ def verifyKeyCheck(key, base_dir='Data'):
 # ENTRY POINT...
 
 def main(args):
+    global MAX_THREADS
+
     # Script name and Author information.
     print_('R3PAKER - Secure File and Document Storage System.')
     print_('Created by Tristan Strathearn (www.r3oath.com)')
@@ -337,6 +412,9 @@ def main(args):
         base_dir = userInput('Which directory are you working with?', 'Data')
     else:
         base_dir = args.d
+
+    # Get the number of threads.
+    MAX_THREADS = args.t if args.t >= 1 else 1
 
     # Get the pak command.
     pak_command = ''
@@ -385,7 +463,15 @@ if __name__ == "__main__":
                             help='The directory to work with.')
     arg_parser.add_argument('-a', metavar='Action', type=str,
                             help='The action to take. (P)ack or (U)npack.')
+    arg_parser.add_argument('-t', metavar='Threads', type=int, default=5,
+                            help='Number of threads to use. (Default 5)')
     args = arg_parser.parse_args()
 
     # Start the script.
-    main(args)
+    try:
+        main(args)
+    except KeyboardInterrupt:
+        newLine()
+        print_('User cancelled process.', highlight=True)
+        print_('Now quitting...')
+        sys.exit(1)
