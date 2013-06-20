@@ -9,7 +9,7 @@ Copyright (C) 2013 Tristan Strathearn (r3oath@gmail.com)
 
 ####Requirements
 
-R3PAKER makes use of the Crypto Python Module. Please make sure you have this installed before using.
+R3PAKER makes use of the [Crypto Python Module](https://www.dlitz.net/software/pycrypto/). Please make sure you have this installed before using.
 
 ##Usage
 
