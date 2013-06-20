@@ -18,6 +18,7 @@ from Crypto.Cipher import AES
 from Crypto import Random
 
 R3PACK_SIGNATURE = '_r3pak'
+VERSION = '1.0.0'
 
 # ----------------------------------------------------------------------------
 
@@ -376,6 +377,8 @@ if __name__ == "__main__":
     # Command line arguments handler.
     arg_parser = ArgumentParser(description=
                                 'Secure File and Document Storage System.')
+    arg_parser.add_argument('-v', '--version', action='version',
+                            version='R3PAKER Version %s' % VERSION)
     arg_parser.add_argument('-k', metavar='Key', type=str,
                             help='The secret key.')
     arg_parser.add_argument('-d', metavar='Directory', type=str,
