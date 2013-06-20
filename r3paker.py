@@ -341,7 +341,7 @@ def main(args):
     pak_command = ''
     if args.a == None:
         pak_command = userInput('Action: (P)ack or (U)npack the data?',
-                            'P').lower()
+                                'P').lower()
     else:
         pak_command = args.a.lower()
 
@@ -358,8 +358,8 @@ def main(args):
 
     if pak_command == 'u':
         if verifyKeyCheck(key, base_dir=base_dir) is False:
-            print_('Key check file could not be verified!', highlight=True)
-            ans = userInput('Damages could occur, type YES to continue',
+            print_('Keycheck file could not be verified!', highlight=True)
+            ans = userInput('Type YES to continue, files may get scrambled.',
                             'No')
             if ans == 'YES':
                 paker = r3paker()
